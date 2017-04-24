@@ -54,7 +54,7 @@
 </group> <!-- SYSLOG,LOCAL -->
 
 <group name="windows,">
-<!—APPLOCKER RULES Created by Tom Webb tcw3bb@gmail.com —>
+<!-- APPLOCKER RULES Created by Tom Webb tcw3bb@gmail.com -->
 <rule id="100000" level="2">
  <if_sid>18101</if_sid>
  <id>^8002</id>
@@ -134,14 +134,14 @@
  <description>AppLocker allowed a program to execute with local workstation administrator account.</description>
 </rule>
 
-<rule id="100012" level="2">
+<rule id="100013" level="2">
  <if_sid>18101</if_sid>
  <id>^8002</id>
  <user>Administrator|GhostBusters|idiocracy|Siemens</user>
  <description>AppLocker allowed a program to execute with local server administrator account.</description>
 </rule>
 
-<rule id="100013" level="2">
+<rule id="100012" level="2">
  <if_sid>18101</if_sid>
  <id>^8002</id>
  <user>SYSTEM</user>
@@ -149,5 +149,11 @@
 </rule>
 </group>
 
+<rule id="554" level="10" overwrite="yes">
+  <category>ossec</category>
+  <decoded_as>syscheck_new_entry</decoded_as>
+  <description>File added to the system.</description>
+  <group>syscheck,</group>
+</rule>
 
 <!-- EOF -->
