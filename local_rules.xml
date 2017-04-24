@@ -149,11 +149,11 @@
 </rule>
 </group>
 
-<rule id="554" level="10" overwrite="yes">
-  <category>ossec</category>
-  <decoded_as>syscheck_new_entry</decoded_as>
-  <description>File added to the system.</description>
-  <group>syscheck,</group>
-</rule>
-
+<group name="syscheck,">
+  <rule id="554" level="10" overwrite="yes">
+    <category>ossec</category>
+    <decoded_as>syscheck_new_entry</decoded_as>
+    <description>File added to the system.</description>
+  </rule>
+</group>
 <!-- EOF -->
