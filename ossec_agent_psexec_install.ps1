@@ -59,6 +59,9 @@ $cred = get-credential
 $pass = $cred.getnetworkcredential().password
 $user = $cred.username
 $output = "ossec_installs.txt"
+$PFExists = $False
+$PF86Exists = $False
+$ProgramDir = "not program files?"
 
 #Check if input file exists. Exit if not.
 $FileExists = Test-Path $computers_file
@@ -71,7 +74,7 @@ if($FileExists -eq $False) {
 $computers = (Get-Content $computers_file)
 #write-host $computers[0]
 
-"Output logged to $output." -foregroundcolor yellow
+write-host "Output logged to $output." -foregroundcolor yellow
 
 # loop through each computer and install ossec agent, copy files, start service
 foreach ($remote in $computers)
@@ -84,11 +87,14 @@ foreach ($remote in $computers)
 	#write-host $keyfile
 	
 	# install ossec-agent.exe
-	"[ ] Installing on $ip with $hostname" -foregroundcolor white
+	write-host "[ ] Installing on $ip with $hostname" -foregroundcolor white
 	"Installing on $ip with $hostname" | out-file $output -append
     
+	& C:\Windows\System32\net.exe use \\$ip\C$ $pass /user:$user /persistent:no
+	
 	#check if Program Files or Program Files (x86)
-	$PFExists = test-path "\\$ip\C$\Program Files\"
+	$PFExists = test-path "\\$ip\C$\Program Files\" 
+	
 	if ($PFExists -eq $True) {
 		$ProgramDir = "Program Files"
 		} 
@@ -96,22 +102,38 @@ foreach ($remote in $computers)
 	if ($PF86Exists -eq $True) {
 		$ProgramDir = "Program Files (x86)"
 		}
-
+	
+	write-host $ProgramDir
 	
 	# test if already installed
 	$FileExists =test-path "\\$ip\c$\$ProgramDir\ossec-agent\ossec-agent.exe"
 	if($FileExists -eq $True) {
 		write-host "     $ip already has ossec-agent installed. Continuing." -foregroundcolor yellow | out-file $output -append
 	} else {
-		& C:\Users\Administrator\Desktop\SysInternals\PsExec.exe \\$ip -u $user -p $pass -c ossec-agent-win32-2.8.3.exe /S -accepteula >> $output
+		
+		try {		
+			& C:\Users\Administrator\Desktop\SysInternals\PsExec.exe \\$ip -u $user -p $pass -c ossec-agent-win32-2.8.3.exe /S -accepteula >> $output
+		} 
+		catch {
+			write-host $_ 
+			write-host "$_  occured installing the agent on $ip - $hostname "| out-file $output -append
+			continue
+		}
 	}
 	
 	# copy config file to correct location.
-	"[ ] Copying $config" -foregroundcolor white
+	write-host "[ ] Copying $config" -foregroundcolor white
 	"Copying $config" | out-file $output -append
-	copy-item -path "\\$ip\c$\$ProgramDir\ossec-agent\ossec.conf" -destination "\\$ip\c$\$ProgramDir\ossec-agent\ossec-conf.bak" -force >> $output
-	
-	copy-item -path $config -destination "\\$ip\c$\$ProgramDir\ossec-agent\ossec.conf" -force >> $output
+	try {
+		copy-item -path "\\$ip\c$\$ProgramDir\ossec-agent\ossec.conf" -destination "\\$ip\c$\$ProgramDir\ossec-agent\ossec-conf.bak" -force >> $output
+		copy-item -path $config -destination "\\$ip\c$\$ProgramDir\ossec-agent\ossec.conf" -force >> $output
+	}
+	catch {
+		write-host $_ 
+		write-host $error[0]
+		write-host "$_  occured copying the config file on $ip - $hostname "| out-file $output -append
+		continue
+	}
 	
 	# copy corresponding host client.keys file 
 	if($keys.substring($keys.length-1) -eq "\") {
@@ -119,15 +141,22 @@ foreach ($remote in $computers)
 		}
 	
 	$keyfile = $keys + "\" + $hostname + "_client.keys"
-	"[ ] Copying $keyfile to $hostname" -foregroundcolor white
+	write-host "[ ] Copying $keyfile to $hostname" -foregroundcolor white
 	"Copying $keyfile to $hostname" | out-file $output -append
-	copy-item -path $keyfile -destination "\\$ip\c$\$ProgramDir\ossec-agent\client.keys" -force >> $output
-	
+	try {
+		copy-item -path $keyfile -destination "\\$ip\c$\$ProgramDir\ossec-agent\client.keys" -force >> $output
+		}
+	catch {
+		write-host $_ 
+		write-host "$_  occured copying the client_keys file on $ip - $hostname "| out-file $output -append
+		continue
+	}
 	# start service
-	"[ ] Starting ossec-agent service" -foregroundcolor white
+	write-host "[ ] Starting ossec-agent service" -foregroundcolor white
 	"Starting ossec-agent service" | out-file $output -append
 	get-service -computer $ip "OSSEC HIDS" | set-service -status running
 	get-service -computer $ip "OSSEC HIDS" | out-file $output -append
 	
+	& C:\Windows\System32\net.exe use /delete \\$ip\C$
 	"____________________________________________" | out-file $output -append
 }
