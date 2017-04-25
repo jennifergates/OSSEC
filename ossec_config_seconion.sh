@@ -7,19 +7,16 @@
 ##########################################
 
 
-#if [ "$#" -lt 1 ];then
-#	echo "Usage: ossec_config_seconion.sh <subnetOfAgents>"
-#	exit 0
-#fi
+clear
 
-if [ ! id -u ]; then
+if [ ` id -u` -ne 0 ]; then
 	echo "This script must be run as root or with sudo."
 	exit 0
 fi
 
 echo "Adding firewall rules for agents to communicate with the OSSEC server. "
 echo "Enter an IP (1.2.3.4) or Subnet in CIDR notation (1.2.3.4/24)"
-echo " or 'Done' when finished"
+echo "or 'Done' when finished:"
 read SUBNET
 
 while [ $SUBNET != "Done" ]; do
@@ -33,6 +30,10 @@ while [ $SUBNET != "Done" ]; do
 	echo "[ ] Configuring firewall to allow agent data"
 	echo "[ ] Adding rule: ufw allow proto udp from $SUBNET to any port 1514"
 	ufw allow proto udp from $SUBNET to any port 1514
+	
+	echo " "
+	echo "Enter an IP (1.2.3.4) or Subnet in CIDR notation (1.2.3.4/24)"
+	echo "or 'Done' when finished:"
 	
 	read SUBNET
 done
