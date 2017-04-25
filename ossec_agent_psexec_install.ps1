@@ -63,13 +63,15 @@ $output = "ossec_installs.txt"
 #Check if input file exists. Exit if not.
 $FileExists = Test-Path $computers_file
 if($FileExists -eq $False) {
-	write-host "$computers_file does not exist." 
+	write-host "$computers_file does not exist."  -foregroundcolor red
 	exit
 } 
 
 #import computer hostname,IP from input file	
 $computers = (Get-Content $computers_file)
 #write-host $computers[0]
+
+"Output logged to $output." -foregroundcolor yellow
 
 # loop through each computer and install ossec agent, copy files, start service
 foreach ($remote in $computers)
@@ -82,7 +84,7 @@ foreach ($remote in $computers)
 	#write-host $keyfile
 	
 	# install ossec-agent.exe
-	"[ ] Installing on $ip with $hostname"
+	"[ ] Installing on $ip with $hostname" -foregroundcolor white
 	"Installing on $ip with $hostname" | out-file $output -append
     
 	#check if Program Files or Program Files (x86)
@@ -99,13 +101,13 @@ foreach ($remote in $computers)
 	# test if already installed
 	$FileExists =test-path "\\$ip\c$\$ProgramDir\ossec-agent\ossec-agent.exe"
 	if($FileExists -eq $True) {
-		write-host "     $ip already has ossec-agent installed. Continuing." | out-file $output -append
+		write-host "     $ip already has ossec-agent installed. Continuing." -foregroundcolor yellow | out-file $output -append
 	} else {
 		& C:\Users\Administrator\Desktop\SysInternals\PsExec.exe \\$ip -u $user -p $pass -c ossec-agent-win32-2.8.3.exe /S -accepteula >> $output
 	}
 	
 	# copy config file to correct location.
-	"[ ] Copying $config"
+	"[ ] Copying $config" -foregroundcolor white
 	"Copying $config" | out-file $output -append
 	copy-item -path "\\$ip\c$\$ProgramDir\ossec-agent\ossec.conf" -destination "\\$ip\c$\$ProgramDir\ossec-agent\ossec-conf.bak" -force >> $output
 	
@@ -117,14 +119,15 @@ foreach ($remote in $computers)
 		}
 	
 	$keyfile = $keys + "\" + $hostname + "_client.keys"
-	"[ ] Copying $keyfile to $hostname"
+	"[ ] Copying $keyfile to $hostname" -foregroundcolor white
 	"Copying $keyfile to $hostname" | out-file $output -append
 	copy-item -path $keyfile -destination "\\$ip\c$\$ProgramDir\ossec-agent\client.keys" -force >> $output
 	
 	# start service
-	"[ ] Starting ossec-agent service"
+	"[ ] Starting ossec-agent service" -foregroundcolor white
 	"Starting ossec-agent service" | out-file $output -append
 	get-service -computer $ip "OSSEC HIDS" | set-service -status running
+	get-service -computer $ip "OSSEC HIDS" | out-file $output -append
 	
 	"____________________________________________" | out-file $output -append
 }
