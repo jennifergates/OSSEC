@@ -14,14 +14,12 @@ else
 
 		KEY=$1
 		TAR=$2
-		USERNAME=${LINE%:*}
-		USERNAME=${USERNAME%:*}
-		USERNAME=${USERNAME%:*}
-		HOST=${LINE#*:}
-		HOST=${HOST%:*}
-		FQDN=${HOST#*:}
-		HOST=${HOST%:*}
-		INSTALLER=${LINE##*:}
+
+
+		USERNAME=$( echo $LINE | cut -d ":" -f1)
+		HOST=$( echo $LINE | cut -d ":" -f2)
+		FQDN=$( echo $LINE | cut -d ":" -f3)
+		INSTALL=$( echo $LINE | cut -d ":" -f4 )
 	
 		echo "________________________________"
 		echo "${USERNAME}@${HOST} with $INSTALLER"	
@@ -39,7 +37,8 @@ else
 			echo "[ ] Installing prerequisites with apt and running unattended install. Prompts for ssh key passphrase and user's password for sudo command."
 			ssh -i $KEY ${USERNAME}@${HOST} -tt 'export DEBIAN_FRONTEND=noninteractive && apt-get install --assume-yes'
 			ssh -i $KEY ${USERNAME}@${HOST} -tt 'export DEBIAN_FRONTEND=noninteractive && apt-get install build-essential libssl-dev --assume-yes && cd /tmp/ossec-hids-LS17-2.8.3 && ./install.sh && /var/ossec/bin/agent-auth -A ${FQDN} -m 10.11.5.2 -p 1515 && /var/ossec/bin/ossec-control restart'
-		
+			ssh -i $KEY ${USERNAME}@${HOST} -tt 'export DEBIAN_FRONTEND=noninteractive &&  cd /tmp/ossec-hids-2.8.3 && ./install.sh && /var/ossec/bin/agent-auth -A ${FQDN} -m 10.11.5.2 -p 1515 && /var/ossec/bin/ossec-control restart'
+
 		else 
 			echo "[ ] Installing prerequisites with yum and running unattended install. Prompts for ssh key passphrase and user's password for sudo command."	
 			ssh -i $KEY ${USERNAME}@${HOST} -tt 'export DEBIAN_FRONTEND=noninteractive && yum install -y openssl-devel && cd /tmp/ossec-hids-2.8.3 && ./install.sh && /var/ossec/bin/agent-auth -A ${FQDN} -m 10.11.5.2 -p 1515 && /var/ossec/bin/ossec-control restart'
