@@ -19,7 +19,7 @@ else
 		USERNAME=$( echo $LINE | cut -d ":" -f1)
 		HOST=$( echo $LINE | cut -d ":" -f2)
 		FQDN=$( echo $LINE | cut -d ":" -f3)
-		INSTALL=$( echo $LINE | cut -d ":" -f4 )
+		INSTALLER=$( echo $LINE | cut -d ":" -f4 )
 	
 		echo "________________________________"
 		echo "${USERNAME}@${HOST} with $INSTALLER"	
